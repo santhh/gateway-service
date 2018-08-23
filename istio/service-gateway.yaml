@@ -1,0 +1,53 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: student-gateway
+spec:
+  selector:
+    istio: ingressgateway # use istio default controller
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: studentinfo
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - student-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /jpa/v1/students
+    route:
+    - destination:
+        host: gateway-service
+        port:
+          number: 8080      
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: registration-service
+spec:
+  hosts:
+    - gateway-service
+  http:
+  - route:
+    - destination:
+        host: registration-service
+        subset: v1
+      weight: 70
+    - destination:
+        host: registration-service
+        subset: v2
+      weight: 30
+
+
